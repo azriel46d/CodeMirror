@@ -55,14 +55,6 @@
         { keyCode: 48, shiftKey: true, close: true, trigger: "method" }, //)
         { keyCode: 57, shiftKey: true, next: true, trigger: "declaration" }, // (
         { keyCode: 57,  trigger: "method", shiftKey:true, function: highlightFnParamTooltop, delay: 200 }, // ,
-        { keyCode: 8, function(editor) {
-          var pos = editor.getCursor()
-          var intellisenseStart = editor.intellisense.getDecls().initialFilterPosition
-          if (intellisenseStart && pos.ch < intellisenseStart.ch && editor.intellisense.getDecls().isVisible()) {
-            editor.intellisense.getDecls().setVisible(false)
-          }
-          
-        },trigger: "method" }, // bkspace
         { keyCode: 188,  trigger: "method", function: highlightFnParamTooltop } // ,
       ],
       keywords: {

@@ -51,14 +51,15 @@
     modeInstance.triggers.forEach(function(t) {
       intellisense.addEventTrigger(t);
     });
-    var _chosenItem
+
+    //ON HAVING AN ITEM CHOSEN, show the appropriate tooltip
+    var _chosenItem;
     intellisense.decls.onItemChosen(function(item) {
       _chosenItem = {
         item: item,
         pos: editor.getCursor()
       };
       if (item && item.parameters && item.parameters.length) {
-        
         if (item.value.charAt(item.value.length - 1) === "(") {
           intellisense.declarationsCallback({
             keyCode: 57,
@@ -67,8 +68,8 @@
             trigger: "declaration"
           });
         }
-        
-        var tooltip = intellisense.formatItemTooltip(item, {highlight:0})
+
+        var tooltip = intellisense.formatItemTooltip(item, { highlight: 0 });
         setTimeout(function() {
           intellisense.showHoverTooltip(tooltip);
         }, 200);
@@ -77,29 +78,30 @@
 
     // called when the user has hovered over some text
     intellisense.onHover(function(item) {
-      var word = intellisense.getWordAtPosition(item)
+      var word = intellisense.getWordAtPosition(item);
       if (word) {
-        var defn = keywords.find(function(k) {return k.name.toLowerCase() == word.toLowerCase()})
+        var defn = keywords.find(function(k) {
+          return k.name.toLowerCase() == word.toLowerCase();
+        });
         if (defn) {
-          var tooltip = intellisense.formatItemTooltip(defn)
-          intellisense.showHoverTooltip(tooltip,{cursor:true});
+          var tooltip = intellisense.formatItemTooltip(defn);
+          intellisense.showHoverTooltip(tooltip, { cursor: true });
         }
-
       }
     });
 
+    //PERform the appropriate trigger
     intellisense.onMethod(function(item) {
       if (item.close) {
         intellisense.getDecls().setVisible(false);
         intellisense.getMeths().setVisible(false);
       } else if (item.function) {
-        item.function(editor, keywords, item)
+        item.function(editor, keywords, item);
       }
     });
 
     // called when the declarations are triggered
     editor.intellisense.onDeclaration(function(item) {
-
       if (item.keyCode == 32 && item.ctrlKey) {
         //IF the editor is loaded in mid senetence
         var pos = editor.getCursor();
@@ -112,11 +114,21 @@
         editor.intellisense.setStartColumnIndex(pos.indexOf("!!__!!"));
         editor.intellisense.decls.setFilter(filter);
       }
+      var pos = editor.getCursor();
+      editor.intellisense._initialFilterPosition = {
+        ch: pos.ch + 1,
+        line: pos.line
+      };
       if (item.next) {
         CodeMirror.on(editor, "keydown", function __lazy(cm, evt) {
           CodeMirror.off(editor, "keydown", __lazy);
-          if (modeInstance.triggers.find(function (t) {t.keyCode === evt.keyCode }) || evt.keyCode === 8) {
-            return false
+          if (
+            modeInstance.triggers.find(function(t) {
+              t.keyCode === evt.keyCode;
+            }) ||
+            evt.keyCode === 8
+          ) {
+            return false;
           }
           editor.intellisense.setStartColumnIndex(editor.getCursor().ch);
           editor.intellisense.setDeclarations(keywords);
@@ -124,7 +136,22 @@
 
         return false;
       }
+
       editor.intellisense.setDeclarations(keywords);
+    });
+
+    CodeMirror.on(editor, "keydown", function __backspace(cm, ev) {
+      if (ev.keyCode === 8) {
+        var pos = editor.getCursor();
+        var intellisenseStart = editor.intellisense._initialFilterPosition;
+        if (
+          intellisenseStart &&
+          pos.ch < intellisenseStart.ch &&
+          editor.intellisense.getDecls().isVisible()
+        ) {
+          editor.intellisense.getDecls().setVisible(false);
+        }
+      }
     });
   }
 
@@ -165,7 +192,7 @@
     // when an item is chosen by the declarations UI, set the value.
     this.decls.onItemChosen(function(item) {
       if (!item) {
-        return false
+        return false;
       }
       var doc = editor.getDoc();
       var itemValue = item.value || item.name;
@@ -314,13 +341,16 @@
    * Shows a hover tooltip at the last position of the mouse
    * @param tooltipString The tooltip string to show
    */
-  CodeMirrorIntellisense.prototype.showHoverTooltip = function(tooltipString, opts) {
+  CodeMirrorIntellisense.prototype.showHoverTooltip = function(
+    tooltipString,
+    opts
+  ) {
     if (tooltipString == null || tooltipString === "") {
       this.tooltip.setVisible(false);
     } else {
       var pos = this.editor.charCoords(this.editor.getCursor(), "page");
       this.tooltip.setHtml(tooltipString);
-      if (opts && opts.cursor){ 
+      if (opts && opts.cursor) {
         this.tooltip.setPosition(this.lastMouseX, this.lastMouseY);
       } else {
         this.tooltip.setPosition(pos.left, pos.bottom);
@@ -423,14 +453,14 @@
   CodeMirrorIntellisense.prototype.setStartColumnIndex = function(i) {
     this.autoCompleteStart.columnIndex = i;
   };
-  
-  /** 
+
+  /**
    * Get the word at a particular position
    * @param pos CodeMirror posiiotn object
    */
-  CodeMirrorIntellisense.prototype.getWordAtPosition = function (pos) {
+  CodeMirrorIntellisense.prototype.getWordAtPosition = function(pos) {
     if (!pos) {
-      return
+      return;
     }
     var line = editor.getLine(pos.line);
     var char = pos.ch;
@@ -443,44 +473,50 @@
       }
       counter += len;
     });
-  }
+  };
 
   /**
    * Given a keyword item , generat a tooltip which has the name, parameters and description
-   * 
-   * @param {*} item 
-   * @param {*} opts 
+   *
+   * @param {*} item
+   * @param {*} opts
    * @param {number} opts.highlight Highlight a particular parameter
    */
   CodeMirrorIntellisense.prototype.formatItemTooltip = function(item, opts) {
-    var description = item.description || '';
-    var name = item.name || '';
+    var description = item.description || "";
+    var name = item.name || "";
     var params = item.parameters || "";
-    var commaCounter = -1
+    var commaCounter = -1;
     params =
       "(" +
-      params.reduce(function(str, p, i ) {
-        commaCounter++
-        var isHighlight = (opts && typeof opts.highlight !== undefined && opts.highlight === commaCounter) 
-        str += (isHighlight) ? '<strong class="tooltip-highlight">' : ''
-        str += p.name 
-        str += (isHighlight) ? '</strong>' : ''
+      params.reduce(function(str, p, i) {
+        commaCounter++;
+        var isHighlight =
+          opts &&
+          typeof opts.highlight !== undefined &&
+          opts.highlight === commaCounter;
+        str += isHighlight ? '<strong class="tooltip-highlight">' : "";
+        str += p.name;
+        str += isHighlight ? "</strong>" : "";
         str += ", ";
 
         if (p.repeatable) {
-          commaCounter++
-          isHighlight = (opts && typeof opts.highlight !== undefined && opts.highlight >= commaCounter) 
-          str += (isHighlight) ? '<strong class="tooltip-highlight">' : ''
+          commaCounter++;
+          isHighlight =
+            opts &&
+            typeof opts.highlight !== undefined &&
+            opts.highlight >= commaCounter;
+          str += isHighlight ? '<strong class="tooltip-highlight">' : "";
           str += "...";
-          str += (isHighlight) ? '</strong>' : ''
+          str += isHighlight ? "</strong>" : "";
           str += ", ";
         }
-       
+
         return str;
       }, "");
     params = params.substring(0, params.length - 2) + ")";
     return "<h5>" + name + " <span>" + params + "</h5><hr/>" + description;
-  }
+  };
 
   /**
    *
@@ -1016,7 +1052,7 @@
         var _this = this;
         this.listElement.innerHTML = "";
         this.filteredDeclarationsUI = [];
-        
+
         this.filteredDeclarations.forEach(function(item, idx) {
           var listItem = _this.createListItemDefault(item, idx);
           listItem.ondblclick = function() {
@@ -1032,9 +1068,12 @@
           _this.filteredDeclarationsUI.push(listItem);
         });
         this.refreshSelected();
-        showElement(this.listElement, (this.filteredDeclarations.length) ? true : false)
+        showElement(
+          this.listElement,
+          this.filteredDeclarations.length ? true : false
+        );
         if (!this.filteredDeclarations.length) {
-          this.showDocumentation(false)
+          this.showDocumentation(false);
         }
       };
       DeclarationsIntellisense.prototype.showDocumentation = function(b) {
@@ -1111,13 +1150,6 @@
         var _this = this;
         if (this.filterText !== f) {
           this.setSelectedIndex(0);
-          if (!this.filterText.length) {
-            var pos = editor.getCursor()
-            this.initialFilterPosition = {
-              ch: pos.ch - 1,
-              line: pos.line
-            }
-          }
           this.filterText = f;
         }
         var ret = [];
