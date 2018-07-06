@@ -1,3 +1,11 @@
+### New feature
+[intellisense addon]: Added a new intellisense addon starting from the work done @ https://github.com/BayardRock/WebIntellisense
+
+This addon works similar to the modes with particular specific intellisense files located in the addon directory.
+The addon already includes a spreadsheet mode. The intellisens mode registers itself to code mirror and adds two
+items in the registation: 1. triggers - on which keys will the intellisense show 2. keywords - an object with keywords. Each keywords has a description, and the set of parameters it can take and optionally a value, if no value is passed the key used + "(" will be used as the value. 
+
+
 ## 5.39.0 (2018-06-20)
 
 ### Bug fixes
