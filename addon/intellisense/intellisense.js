@@ -163,14 +163,14 @@
   function noop() {}
   function CodeMirrorIntellisense(editor) {
     var _this = this;
-    this.decls = new wi.DeclarationsIntellisense();
-    this.meths = new wi.MethodsIntellisense();
+    this.decls = new wi.DeclarationsIntellisense(editor);
+    this.meths = new wi.MethodsIntellisense(editor);
     this.triggers = { upDecls: [], downDecls: [], upMeths: [], downMeths: [] };
     this.declarationsCallback = noop;
     this.methodsCallback = noop;
     this.autoCompleteStart = { lineIndex: 0, columnIndex: 0 };
     this.hoverTimeout = 300;
-    this.tooltip = new wi.Tooltip();
+    this.tooltip = new wi.Tooltip(editor);
     this.lastMouseX = 0;
     this.lastMouseY = 0;
     this.prevCoords = { line: 0, ch: 0 };
@@ -462,7 +462,7 @@
     if (!pos) {
       return;
     }
-    var line = editor.getLine(pos.line);
+    var line = this.editor.getLine(pos.line);
     var char = pos.ch;
     var subSplit = line.split(/[\(,=\) ]/g);
     var counter = 0;
@@ -613,7 +613,8 @@
      * Provides a user interface for a tooltip.
      */
     var Tooltip = (function() {
-      function Tooltip() {
+      function Tooltip(editor) {
+        this.editor = editor
         this.visible = false;
         this.events = { visibleChanged: [] };
         this.tooltipElement = document.getElementById("br-tooltip-div");
@@ -621,7 +622,7 @@
           this.tooltipElement = document.createElement("div");
           this.tooltipElement.id = "br-tooltip-div";
           this.tooltipElement.className = "br-tooltip";
-          document.body.appendChild(this.tooltipElement);
+          this.editor.getWrapperElement().appendChild(this.tooltipElement);
         }
       }
       /**
@@ -685,6 +686,10 @@
        * @param top The top pixel position
        */
       Tooltip.prototype.setPosition = function(left, top) {
+        var w = this.tooltipElement.offsetWidth || 300
+        if (left + w > window.innerWidth) {
+          left = window.innerWidth - w - 15
+        }
         this.tooltipElement.style.left = left + "px";
         this.tooltipElement.style.top = top + "px";
       };
@@ -696,12 +701,16 @@
      * a div that preview a list of strings.
      */
     var MethodsIntellisense = (function() {
-      function MethodsIntellisense() {
+      function MethodsIntellisense(editor) {
         var _this = this;
+        this.editor = editor
         this.events = { visibleChanged: [] };
         this.visible = false;
         this.methods = [];
         this.selectedIndex = 0;
+        if (document.querySelector('.br-methods')){
+          document.querySelector('.br-methods').parentNode.removeChild(document.querySelector('.br-methods'))
+        }
         this.methodsElement = document.createElement("div");
         this.methodsTextElement = document.createElement("div");
         this.arrowsElement = document.createElement("div");
@@ -721,7 +730,7 @@
         this.arrowsElement.appendChild(this.downArrowElement);
         this.methodsElement.appendChild(this.arrowsElement);
         this.methodsElement.appendChild(this.methodsTextElement);
-        document.body.appendChild(this.methodsElement);
+        this.editor.getWrapperElement().appendChild(this.methodsElement);
         // arrow click events
         this.downArrowElement.onclick = function() {
           _this.moveSelected(1);
@@ -851,7 +860,9 @@
      * triggered by a keyboard event), the user can select an item from the list.
      */
     var DeclarationsIntellisense = (function() {
-      function DeclarationsIntellisense() {
+      
+      function DeclarationsIntellisense(editor) {
+        this.editor = editor
         this.events = { itemChosen: [], itemSelected: [], visibleChanged: [] };
         this.selectedIndex = 0;
         this.filteredDeclarations = [];
@@ -878,13 +889,21 @@
         this.filterMode = this.filterModes.startsWith;
         // ui widgets
         this.selectedElement = null;
+        console.log(this)
+        if (this.editor.getWrapperElement().querySelector('.br-intellisense')){
+          this.editor.getWrapperElement().querySelector('.br-intellisense').parentNode.removeChild(document.querySelector('.br-intellisense'))
+        }
+        if (document.querySelector('.br-documentation')){
+          this.editor.getWrapperElement().querySelector('.br-documentation').parentNode.removeChild(document.querySelector('.br-documentation'))
+        }
         this.listElement = document.createElement("ul");
         this.documentationElement = document.createElement("div");
         this.listElement.className = "br-intellisense";
         this.documentationElement.className = "br-documentation";
-        document.body.appendChild(this.listElement);
-        document.body.appendChild(this.documentationElement);
+        this.editor.getWrapperElement().appendChild(this.listElement);
+        this.editor.getWrapperElement().appendChild(this.documentationElement);
       }
+
       /**
        * Provides common keyboard event handling for a keydown event.
        *
@@ -1117,9 +1136,18 @@
         this.listElement.style.left = left + "px";
         this.listElement.style.top = top + "px";
         // reposition documentation (magic number offsets can't figure out why)
-        this.documentationElement.style.left =
-          left + this.listElement.offsetWidth + 5 + "px";
+        var windowWidth = window.innerWidth
+        var overallWidth = left + this.listElement.offsetWidth + 5 + this.documentationElement.offsetWidth
         this.documentationElement.style.top = top + 5 + "px";
+        if (overallWidth > windowWidth) {
+          this.documentationElement.style.left = left - this.documentationElement.offsetWidth + 'px'
+        } else {
+          this.documentationElement.style.left = left + this.listElement.offsetWidth + 5 + "px";
+        }
+       // console.log(windowWidth + '   ' + left   + this.listElement.offsetWidth)
+
+        
+        
       };
       /**
        * Setter for how the filter behaves. There are two default implementations

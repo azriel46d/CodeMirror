@@ -2,9 +2,9 @@
     min-width: 220px;
     max-height: 176px;
     min-height: 22px;
-    z-index: 10;
+    z-index: 99;
     overflow: auto;
-    position: absolute;
+    position: fixed;
     background-color: white;
     border: 1px solid #E5C365;
     box-shadow: 2px 3px 5px rgba(0, 0, 0, .2);
@@ -22,8 +22,8 @@
     max-width: 320px;
     padding: 3px;
     overflow: auto;
-    position: absolute;
-    z-index: 10;
+    position: fixed;
+    z-index: 99;
     background-color: #efefef;
     border: 1px solid #dedede;
     box-shadow: 2px 3px 5px rgba(0,0,0,.2);
@@ -120,8 +120,8 @@
     max-width: 320px;
     max-height: 176px;
     min-height: 22px;
-    z-index: 10;
-    position: absolute;
+    z-index: 99;
+    position: fixed;
     background-color: #efefef;
     border: 1px solid #dedede;
     box-shadow: 2px 3px 5px rgba(0, 0, 0, .2);
