@@ -48,7 +48,7 @@
     editor.intellisense = intellisense;
 
     //Set event triggers
-    modeInstance.triggers.forEach(function(t) {
+    modeInstance.triggers && modeInstance.triggers.forEach(function(t) {
       intellisense.addEventTrigger(t);
     });
 
@@ -889,11 +889,10 @@
         this.filterMode = this.filterModes.startsWith;
         // ui widgets
         this.selectedElement = null;
-        console.log(this)
         if (this.editor.getWrapperElement().querySelector('.br-intellisense')){
           this.editor.getWrapperElement().querySelector('.br-intellisense').parentNode.removeChild(document.querySelector('.br-intellisense'))
         }
-        if (document.querySelector('.br-documentation')){
+        if (this.editor.getWrapperElement().querySelector('.br-documentation')){
           this.editor.getWrapperElement().querySelector('.br-documentation').parentNode.removeChild(document.querySelector('.br-documentation'))
         }
         this.listElement = document.createElement("ul");
